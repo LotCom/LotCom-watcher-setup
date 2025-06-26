@@ -20,11 +20,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Checkout
+    - name: Get version number from commit
       env:
         GH_TOKEN: ${{ github.token }}
+      id: version-number
       shell: pwsh
       run: |
+        # retrieve the most recent commit via SHA
+        $sha = "${{ github.sha }}"
+        $commitMessage = gh api /repos/lotcom/lotcom-watcher/commits/$sha --jq ".commit.message"
+
+        # parse the version number out of the commit message
+        $pattern = '\d+\.\d+\.\d+\.?[\d]*'
+        $result = $commitMessage | Select-String -Pattern $pattern
+        $result = $result.Matches.Value
+        Write-Host "New release version number: $result" 
+
+        # set the output of this step to the VERSION_NUMBER environment var
+        echo "VERSION_NUMBER=$result" >> $env:GITHUB_ENV
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4.3.0
@@ -58,16 +71,9 @@ jobs:
       id: release-tag
       shell: pwsh
       run: |
-        # get all tags sorted by version number
-        $allTags = git tag --list | Sort-Object -Descending
-        $latestTag = $allTags[0]
-        $tag = $latestTag + 1
-        
+        $tag = "$env:VERSION_NUMBER"
         # create github release and set default notes
         gh release create "$tag" --repo="$GITHUB_REPOSITORY" --title="$tag" --notes "Generated release"
-
-        # set the output of this step to the VERSION_NUMBER environment var
-        echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
     
     - name: Upload Setup Package to release
       env:
@@ -75,8 +81,8 @@ jobs:
       shell: pwsh
       run: |
         # use default tag for generated releases
-        $tag = "$env:RELEASE_TAG"
+        $tag = "$env:VERSION_NUMBER"
 
-        # upload the MSIX to the release
+        # upload the setup package to the release
         Compress-Archive -Path "D:\a\Package" -DestinationPath "D:\a\Package\Setup.zip"
         gh release upload $tag "D:\a\Package\Setup.zip"
