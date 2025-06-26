@@ -59,13 +59,13 @@ jobs:
       shell: pwsh
       run: |
         # get all tags sorted by version number
-        $allTags = git tag --list | Sort-Object { [version]($_ -replace '[^0-9.]', '') } -Descending
+        $allTags = git tag --list
         echo $allTags
         if ($allTags.Count -eq 0) {
           echo "No previous tags. Setting to 1"
           $tag = "1"
         } else {
-          echo "Exiting tags."
+          echo "Existing tags."
           $lastTag = $allTags[0]
           echo "Previous tag: $lastTag"
           $lastVersion = [int]($lastTag -replace '[^\d]', '')
