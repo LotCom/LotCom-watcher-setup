@@ -55,6 +55,7 @@ jobs:
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_1 }}
+      id: release-tag
       shell: pwsh
       run: |
         # get all tags sorted by version number
@@ -75,6 +76,9 @@ jobs:
         
         # create github release and set default notes
         gh release create "$tag" --repo="$GITHUB_REPOSITORY" --title="$tag" --notes "Generated release"
+
+        # set the output of this step to the VERSION_NUMBER environment var
+        echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
     
     - name: Upload Setup Package to release
       env:
@@ -82,7 +86,7 @@ jobs:
       shell: pwsh
       run: |
         # use default tag for generated releases
-        $tag = "$env:VERSION_NUMBER"
+        $tag = "$env:RELEASE_TAG"
 
         # upload the MSIX to the release
         Compress-Archive -Path "D:\a\Package" -DestinationPath "D:\a\Package\Setup.zip"
