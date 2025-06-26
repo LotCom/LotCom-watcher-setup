@@ -60,18 +60,24 @@ jobs:
       run: |
         # get all tags sorted by version number
         $allTags = git tag --list | Sort-Object { [version]($_ -replace '[^0-9.]', '') } -Descending
+        echo $allTags
         if ($allTags.Count -eq 0) {
+          echo "No previous tags. Setting to 1"
           $tag = "1"
         } else {
+          echo "Exiting tags."
           $lastTag = $allTags[0]
+          echo "Previous tag: $lastTag"
           $lastVersion = [int]($lastTag -replace '[^\d]', '')
+          echo "Last version: $lastVersion"
           $tag = "$($lastVersion + 1)"
+          echo "$tag"
         }
 
         # Check if tag already exists
-        if (git rev-parse "$tag" 2>$null) {
-          Write-Host "Tag $tag already exists. Skipping release creation."
-          exit 0
+        while (git rev-parse "$tag" 2>$null) {
+          Write-Host "Tag $tag already exists. Incrementing release number for creation."
+          $tag = [int]($tag + 1)
         }
         
         # create github release and set default notes
