@@ -57,9 +57,21 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT_1 }}
       shell: pwsh
       run: |
-        # use default tag for generated releases
-        $previousTag = git describe --tags $(git rev-list --tags --max-count=1)
-        $tag = ([int]$previousTag) + 1
+        # get all tags sorted by version number
+        $allTags = git tag --list | Sort-Object { [version]($_ -replace '[^0-9.]', '') } -Descending
+        if ($allTags.Count -eq 0) {
+          $tag = "1"
+        } else {
+          $lastTag = $allTags[0]
+          $lastVersion = [int]($lastTag -replace '[^\d]', '')
+          $tag = "$($lastVersion + 1)"
+        }
+
+        # Check if tag already exists
+        if (git rev-parse "$tag" 2>$null) {
+          Write-Host "Tag $tag already exists. Skipping release creation."
+          exit 0
+        }
         
         # create github release and set default notes
         gh release create "$tag" --repo="$GITHUB_REPOSITORY" --title="$tag" --notes "Generated release"
