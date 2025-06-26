@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 env:
-  DOTNET_VERSION: '4.7' # The .NET SDK version to use
+  DOTNET_VERSION: '8.0.314' # The .NET SDK version to use
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages # action runner's installed NuGet packages
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
         dotnet build
         # copy out build files
         New-Item -ItemType directory -Path "D:\a\Package" -ErrorAction SilentlyContinue
-        cd ..\bin\Debug\net47
+        cd ..\bin\Debug\net8.0.314
         Copy-Item -Path "*" -Destination "D:\a\Package"
 
     - name: Create release
