@@ -1,0 +1,77 @@
+name: .NET CI/CD
+
+on:
+  push:
+    branches: develop
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '4.7.2' # The .NET SDK version to use
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages # action runner's installed NuGet packages
+
+jobs:
+
+  build:
+
+    name: build-windows
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Checkout
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: pwsh
+      run: |
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v4.3.0
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        cache: true
+
+    - name: Install dependencies
+      shell: pwsh
+      run: dotnet restore
+    
+    - name: Install required workloads
+      shell: pwsh
+      run: |
+        # install dotnet tools
+        dotnet tool install --global wix
+        dotnet workload restore
+      
+    - name: Build
+      shell: pwsh
+      run: |
+        dotnet build
+        # copy out build files
+        New-Item -ItemType directory -Path "D:\a\Package" -ErrorAction SilentlyContinue
+        cd ..\bin\Debug\net472
+        Copy-Item -Path "*" -Destination "D:\a\Package"
+
+    - name: Create release
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_1 }}
+      shell: pwsh
+      run: |
+        # use default tag for generated releases
+        $previousTag = git describe --tags $(git rev-list --tags --max-count=1)
+        $tag = ([int]$previousTag) + 1
+        
+        # create github release and set default notes
+        gh release create "$tag" --repo="$GITHUB_REPOSITORY" --title="$tag" --notes "Generated release"
+    
+    - name: Upload Setup Package to release
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_1 }}
+      shell: pwsh
+      run: |
+        # use default tag for generated releases
+        $tag = "$env:VERSION_NUMBER"
+
+        # upload the MSIX to the release
+        Compress-Archive -Path "D:\a\Package" -DestinationPath "D:\a\Package\Setup.zip"
+        gh release upload $tag "D:\a\Package\Setup.zip"
