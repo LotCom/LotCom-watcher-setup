@@ -31,6 +31,7 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         cache: true
+        cache-dependency-path: "./LotComWatcherSetup/packages.lock.json"
 
     - name: Install dependencies
       shell: pwsh
