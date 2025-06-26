@@ -42,7 +42,6 @@ jobs:
       run: |
         # install dotnet tools
         dotnet tool install --global wix
-        dotnet workload restore
       
     - name: Build
       shell: pwsh
@@ -50,7 +49,7 @@ jobs:
         dotnet build
         # copy out build files
         New-Item -ItemType directory -Path "D:\a\Package" -ErrorAction SilentlyContinue
-        cd ..\bin\Debug\net8.0.314
+        cd ..\bin\Debug\net472
         Copy-Item -Path "*" -Destination "D:\a\Package"
 
     - name: Create release
