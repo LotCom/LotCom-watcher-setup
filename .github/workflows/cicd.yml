@@ -1,4 +1,4 @@
-name: .NET CI/CD
+name: Package Setup
 
 on:
   push:
@@ -59,26 +59,9 @@ jobs:
       shell: pwsh
       run: |
         # get all tags sorted by version number
-        $allTags = git tag --list
-        echo $allTags
-        if ($allTags.Count -eq 0) {
-          echo "No previous tags. Setting to 1"
-          $tag = "1"
-        } else {
-          echo "Existing tags."
-          $lastTag = $allTags[0]
-          echo "Previous tag: $lastTag"
-          $lastVersion = [int]($lastTag -replace '[^\d]', '')
-          echo "Last version: $lastVersion"
-          $tag = "$($lastVersion + 1)"
-          echo "$tag"
-        }
-
-        # Check if tag already exists
-        while (git rev-parse "$tag" 2>$null) {
-          Write-Host "Tag $tag already exists. Incrementing release number for creation."
-          $tag = [int]($tag + 1)
-        }
+        $allTags = git tag --list | Sort-Object -Descending
+        $latestTag = $allTags[0]
+        $tag = $latestTag + 1
         
         # create github release and set default notes
         gh release create "$tag" --repo="$GITHUB_REPOSITORY" --title="$tag" --notes "Generated release"
