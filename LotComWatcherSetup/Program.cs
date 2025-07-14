@@ -86,7 +86,7 @@ namespace LotComWatcherSetup
                 return;
             }
             // set to the directory of the Project folder (side-loaded in <Project>\LotCoMWatcher\Setup)
-            Environment.CurrentDirectory = @"D:\a\LotCom-watcher\LotComWatcher\bin\Release\net9.0-windows10.0.19041.0\win-x64";  // setup project script home
+            Environment.CurrentDirectory = @"D:\a\LotCom-watcher\LotCom-watcher\LotComWatcher\bin\Release\net9.0-windows10.0.19041.0\win-x64";  // setup project script home
             Environment.SetEnvironmentVariable("LATEST_RELEASE", VersionNumber);
             // generates a new GUID for the specific version installation
             Guid ProductId = GenerateProductId($"LotCom Watcher {VersionNumber}");  // Do not change
